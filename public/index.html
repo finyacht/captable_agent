@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cap Table Knowledge Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #4f46e5;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .agent-message {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #messageInput:focus {
+            border-color: #4f46e5;
+        }
+
+        #sendButton {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        #sendButton:hover {
+            background: #4338ca;
+        }
+
+        .quick-questions {
+            padding: 0 20px 20px;
+            background: #f8fafc;
+        }
+
+        .quick-questions h3 {
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .question-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-chip {
+            background: white;
+            border: 1px solid #d1d5db;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .question-chip:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        .setup-complete {
+            background: #d1fae5;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #10b981;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Cap Table Assistant</h1>
+            <p>Your AI-powered guide to cap table management</p>
+        </div>
+
+        <div class="setup-complete">
+            <strong>✅ Ready to Use!</strong> No setup required - ask me anything about cap tables!
+        </div>
+
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="message agent-message">
+                    <strong>👋 Hello!</strong> I'm your Cap Table Assistant. I can help you understand:
+                    <br><br>
+                    • Equity dilution and ownership calculations<br>
+                    • Different share types (common, preferred, options)<br>
+                    • Valuation impacts on cap tables<br>
+                    • Platform features and workflows<br>
+                    <br>
+                    What would you like to know?
+                </div>
+            </div>
+
+            <div class="quick-questions">
+                <h3>Quick Questions:</h3>
+                <div class="question-chips">
+                    <div class="question-chip" onclick="askQuestion('How does equity dilution work?')">How does equity dilution work?</div>
+                    <div class="question-chip" onclick="askQuestion('What are preferred shares?')">What are preferred shares?</div>
+                    <div class="question-chip" onclick="askQuestion('How do stock options affect cap tables?')">How do stock options work?</div>
+                    <div class="question-chip" onclick="askQuestion('What is pre-money vs post-money valuation?')">Pre vs post-money valuation?</div>
+                    <div class="question-chip" onclick="askQuestion('Explain liquidation preferences')">Liquidation preferences</div>
+                    <div class="question-chip" onclick="askQuestion('How to calculate ownership percentage?')">Calculate ownership %</div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-group">
+                    <input type="text" id="messageInput" placeholder="Ask me anything about cap tables...">
+                    <button id="sendButton" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive Knowledge Base with Detailed Answers
+        const knowledgeBase = {
+            "dilution": {
+                keywords: ["dilution", "dilute", "ownership", "percentage", "shares"],
+                answer: "**Equity Dilution Explained:**\n\nDilution occurs when a company issues new shares, reducing existing shareholders' ownership percentages.\n\n**Example:**\n- You own 100,000 shares out of 1,000,000 total (10% ownership)\n- Company issues 500,000 new shares\n- You still own 100,000 shares, but now out of 1,500,000 total\n- Your ownership drops to 6.67%\n\n**Formula:** New Ownership % = (Your Shares) ÷ (Total Shares After Issuance)\n\n**Key Points:**\n• Dilution happens during funding rounds, employee option grants, or warrant exercises\n• Pro-rata rights allow investors to maintain their ownership percentage\n• Anti-dilution provisions protect certain investors from dilution\n• Dilution affects voting power and economic returns"
+            },
+            "preferred": {
+                keywords: ["preferred", "preference", "common", "share types", "investor"],
+                answer: "**Preferred vs Common Shares:**\n\n**Preferred Shares (Usually for Investors):**\n• Liquidation preference - get paid first in exit scenarios\n• Dividend rights - may receive dividends before common\n• Conversion rights - can convert to common shares\n• Voting rights - often have special voting provisions\n• Anti-dilution protection\n\n**Common Shares (Founders & Employees):**\n• Basic ownership rights\n• Voting rights (usually 1 vote per share)\n• Residual economic rights after preferred\n• Subject to vesting schedules\n\n**Example:** In a $10M exit with $5M in preferred shares (1x liquidation preference):\n- Preferred shareholders get their $5M first\n- Remaining $5M goes to common shareholders\n- If exit was only $3M, preferred gets it all"
+            },
+            "options": {
+                keywords: ["options", "stock options", "exercise", "vesting", "employee"],
+                answer: "**Stock Options Explained:**\n\nStock options give employees the right to buy shares at a fixed price (strike price).\n\n**Key Components:**\n• **Strike Price:** Fixed price to buy shares (usually fair market value at grant)\n• **Vesting Schedule:** When you earn the right to exercise (typically 4 years, 1-year cliff)\n• **Exercise:** Actually buying the shares\n• **Expiration:** How long you have to exercise (usually 10 years)\n\n**Example:**\n- Granted 10,000 options at $1 strike price\n- Company now worth $5 per share\n- You can buy 10,000 shares for $10,000 (worth $50,000)\n- Profit: $40,000\n\n**Cap Table Impact:**\n• Options dilute existing shareholders when exercised\n• Companies typically reserve 10-20% of shares for employee options\n• Option pool is usually created/increased before funding rounds"
+            },
+            "valuation": {
+                keywords: ["valuation", "pre-money", "post-money", "409a"],
+                answer: "**Pre-Money vs Post-Money Valuation:**\n\n**Pre-Money Valuation:**\n• Company's value BEFORE new investment\n• What existing shareholders' equity is worth\n\n**Post-Money Valuation:**\n• Company's value AFTER new investment\n• Post-Money = Pre-Money + Investment Amount\n\n**Example:**\n- Pre-money valuation: $10M\n- Investment: $5M\n- Post-money valuation: $15M\n- Investor owns: $5M ÷ $15M = 33.3%\n\n**409A Valuations:**\n• Required for private companies issuing stock options\n• Determines fair market value for strike prices\n• Done by independent third parties\n• Required annually or after material events\n• Affects tax implications for employees"
+            },
+            "liquidation": {
+                keywords: ["liquidation", "preference", "waterfall", "exit", "payout"],
+                answer: "**Liquidation Preferences:**\n\nDetermines who gets paid first and how much in exit scenarios (sale, IPO, liquidation).\n\n**Common Types:**\n• **1x Non-Participating:** Get 1x investment back, then convert to common\n• **1x Participating:** Get 1x back, PLUS participate in remaining proceeds\n• **Capped Participating:** Participating up to a cap (e.g., 3x)\n\n**Example ($20M Exit, $10M Series A with 1x Participating):**\n1. Series A gets $10M first (their preference)\n2. Remaining $10M split pro-rata among all shareholders\n3. If Series A owns 40% post-money, they get additional $4M\n4. Total to Series A: $14M out of $20M (70%!)\n\n**Multiple Preferences:**\n• Series B usually senior to Series A\n• Creates complex waterfall calculations\n• Can significantly impact founder/employee returns"
+            },
+            "ownership": {
+                keywords: ["calculate", "ownership", "percentage", "shares"],
+                answer: "**Calculating Ownership Percentage:**\n\n**Basic Formula:**\nOwnership % = (Your Shares) ÷ (Total Outstanding Shares) × 100\n\n**What to Include in 'Total Outstanding':**\n• Common shares (founders, employees)\n• Preferred shares (investors)\n• Exercised options and warrants\n\n**What NOT to Include:**\n• Unexercised options (unless calculating fully diluted)\n• Reserved but ungranted option pool\n\n**Example Cap Table:**\n• Founders: 6,000,000 shares\n• Series A: 2,000,000 shares  \n• Exercised Options: 500,000 shares\n• Total Outstanding: 8,500,000 shares\n\n**Founder Ownership:** 6,000,000 ÷ 8,500,000 = 70.6%\n\n**Fully Diluted Calculation:**\nIncludes all potential shares if all options/warrants were exercised."
+            },
+            "platform": {
+                keywords: ["platform", "features", "tool", "software", "system"],
+                answer: "**Our Cap Table Platform Features:**\n\n**Core Functionality:**\n• Real-time cap table modeling and updates\n• Automated dilution calculations across funding rounds\n• Scenario planning tools for different exit valuations\n• Employee equity management with vesting tracking\n\n**Reporting & Compliance:**\n• Automated investor reports (quarterly/annual)\n• 409A valuation tracking and integration\n• Tax reporting assistance (1099s, etc.)\n• Board consent and documentation workflow\n\n**Stakeholder Management:**\n• Employee self-service portal to view equity\n• Investor dashboard with portfolio tracking\n• Mobile app for equity tracking on-the-go\n• Automated notifications for vesting milestones\n\n**Advanced Features:**\n• Integration with payroll systems\n• Waterfall analysis for exit scenarios\n• Option exercise management\n• Document management and e-signatures\n\n**Benefits:**\n• Eliminates spreadsheet errors\n• Saves 10+ hours per month on reporting\n• Ensures compliance and accuracy\n• Improves stakeholder transparency"
+            }
+        };
+
+        function findBestMatch(question) {
+            const lowerQuestion = question.toLowerCase();
+            let bestMatch = null;
+            let highestScore = 0;
+
+            for (const [key, data] of Object.entries(knowledgeBase)) {
+                let score = 0;
+                for (const keyword of data.keywords) {
+                    if (lowerQuestion.includes(keyword)) {
+                        score += keyword.length; // Longer keywords get higher scores
+                    }
+                }
+                if (score > highestScore) {
+                    highestScore = score;
+                    bestMatch = data;
+                }
+            }
+
+            return bestMatch;
+        }
+
+        function askQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Find and add response
+            setTimeout(() => {
+                const response = generateResponse(message);
+                addMessage(response, 'agent');
+            }, 500);
+        }
+
+        function generateResponse(question) {
+            const match = findBestMatch(question);
+            
+            if (match) {
+                return match.answer;
+            } else {
+                return `I'd be happy to help with that question about cap tables! Here are some topics I can assist with:
+
+**Equity & Ownership:**
+• How dilution works and affects ownership
+• Calculating ownership percentages
+• Understanding share types (common vs preferred)
+
+**Employee Equity:**
+• Stock options and how they work
+• Vesting schedules and exercise timing
+• Tax implications of equity compensation
+
+**Funding & Valuation:**
+• Pre-money vs post-money valuations
+• How funding rounds affect cap tables
+• Liquidation preferences and exit scenarios
+
+**Platform Features:**
+• Our cap table management tools
+• Reporting and compliance features
+• Stakeholder management capabilities
+
+Could you ask about any of these specific topics? I'll provide detailed explanations with examples!`;
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messages = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            // Convert markdown-style formatting to HTML
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>')
+                .replace(/•/g, '&bull;');
+            
+            messageDiv.innerHTML = formattedText;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 

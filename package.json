@@ -1,0 +1,11 @@
+{
+  "name": "cap-table-assistant",
+  "version": "1.0.0",
+  "description": "AI-powered Cap Table Assistant",
+  "scripts": {
+    "start": "serve public"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+} 
